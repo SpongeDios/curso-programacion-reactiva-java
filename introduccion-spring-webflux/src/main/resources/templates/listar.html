@@ -6,8 +6,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 </head>
 <body class="container">
+    <div th:if="${param.error != null}" th:text="${param.error}"></div>
+    <div th:if="${param.error != null}" th:text="${param.success}"></div>
     <h1 th:text="${titulo}"></h1>
-    <a href="@{/form}"> crear +</a>
+    <a th:href="@{/form}"> crear +</a>
     <table class="table table-dark">
         <thead>
         <tr>
@@ -15,14 +17,20 @@
             <th scope="col">nombre</th>
             <th scope="col">precio</th>
             <th scope="col">fecha</th>
+            <th scope="col">categoria</th>
+            <th scope="col">editar</th>
+            <th scope="col">eliminar</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="producto: ${productos}">
-            <th th:text="${producto.id}">1</th>
-            <th th:text="${producto.nombre}">1</th>
-            <th th:text="${producto.precio}">1</th>
-            <th th:text="${producto.date}">1</th>
+            <th th:text="${producto.id}"></th>
+            <th th:text="${producto.nombre}"></th>
+            <th th:text="${producto.precio}"></th>
+            <th th:text="${producto.date}"></th>
+            <th th:text="${producto.categoria.nombre}"></th>
+            <th><a th:href= "${'/form/'+producto.id}">Editar</a></th>
+            <th><a th:href= "${'/eliminar/'+producto.id}" onclick="return confirm('esta seguro que desea elminar');">Eliminar</a></th>
         </tr>
         </tbody>
     </table>

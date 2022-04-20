@@ -1,6 +1,8 @@
 package com.hector.springboot.webflux.app.services.impl;
 
+import com.hector.springboot.webflux.app.dao.CategoriaDao;
 import com.hector.springboot.webflux.app.dao.ProductoDao;
+import com.hector.springboot.webflux.app.models.Categoria;
 import com.hector.springboot.webflux.app.models.Producto;
 import com.hector.springboot.webflux.app.services.ProductoService;
 import org.springframework.stereotype.Service;
@@ -14,9 +16,11 @@ import java.util.Locale;
 public class ProductoServiceImpl implements ProductoService {
 
     private final ProductoDao productoDao;
+    private final CategoriaDao categoriaDao;
 
-    public ProductoServiceImpl(ProductoDao productoDao) {
+    public ProductoServiceImpl(ProductoDao productoDao, CategoriaDao categoriaDao) {
         this.productoDao = productoDao;
+        this.categoriaDao = categoriaDao;
     }
 
     @Override
@@ -51,5 +55,20 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     public Mono<Void> delete(Producto producto) {
         return productoDao.delete(producto);
+    }
+
+    @Override
+    public Flux<Categoria> findAllCategories() {
+        return categoriaDao.findAll();
+    }
+
+    @Override
+    public Mono<Categoria> findCategoryById(String id) {
+        return categoriaDao.findById(id);
+    }
+
+    @Override
+    public Mono<Categoria> saveCategory(Categoria categoria) {
+        return categoriaDao.save(categoria);
     }
 }

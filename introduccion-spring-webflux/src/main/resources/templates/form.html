@@ -6,25 +6,49 @@
 </head>
 <body class="container">
 <h1 th:text="${titulo}"></h1>
-<a href="@{/listar}"> listar</a>
-<form th:action="@{/form}" th:method="POST" th:object="${producto}">
+<a th:href="@{/listar}"> listar</a>
+<form th:action="@{/form}" th:method="POST" th:object="${producto}" enctype="multipart/form-data">
+    <input th:if="${producto.id != null}" type="hidden" th:field="*{id}" />
+    <input th:if="${producto.foto != null}" type="hidden" th:field="*{foto}" />
     <div>
         <label for="nombre">Nombre</label>
         <div><input type="text" name="nombre" th:field="*{nombre}"/></div>
+        <small th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></small>
     </div>
 
     <div>
         <label for="precio">Precio</label>
         <div><input type="number" name="precio" th:field="*{precio}"/></div>
+        <small th:if="${#fields.hasErrors('nombre')}" th:errors="*{precio}"></small>
+
     </div>
 
     <div>
         <label for="date">Fecha</label>
         <div><input type="date" name="date" th:field="*{date}"/></div>
+        <small th:if="${#fields.hasErrors('nombre')}" th:errors="*{date}"></small>
     </div>
 
     <div>
-        <div><input type="submit" value="Agregar producto"/></div>
+        <label for="categoria">Categoria</label>
+        <div>
+            <select th:field="*{categoria.id}">
+                <option value="" disabled selected>Seleccione categoria</option>
+                <option th:each="categoria: ${categorias}" th:value="${categoria.id}" th:text="${categoria.nombre}"></option>
+            </select>
+            <small th:if="${#fields.hasErrors('categoria.id')}" th:errors="*{categoria.id}"></small>
+        </div>
+    </div>
+
+    <div>
+        <label for="file">Foto</label>
+        <div>
+            <input type="file" name="file"/>
+        </div>
+    </div>
+
+    <div>
+        <div><input type="submit" th:value="${boton}"/></div>
     </div>
 </form>
 </body>

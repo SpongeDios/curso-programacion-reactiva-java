@@ -1,26 +1,44 @@
 package com.hector.springboot.webflux.app.controllers;
 
+import com.hector.springboot.webflux.app.models.Categoria;
 import com.hector.springboot.webflux.app.models.Producto;
 import com.hector.springboot.webflux.app.services.ProductoService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.support.SessionStatus;
 import org.thymeleaf.spring5.context.webflux.ReactiveDataDriverContextVariable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.validation.Valid;
+import java.io.File;
 import java.time.Duration;
+import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.UUID;
 
 @Controller
 @Slf4j
+@SessionAttributes("producto")
 public class ProductoController {
     private final ProductoService productoService;
 
     public ProductoController(ProductoService productoService) {
         this.productoService = productoService;
+    }
+
+    @Value("${config.uploads.path}")
+    private String pathToImages;
+
+    @ModelAttribute("categorias")
+    public Flux<Categoria> categorias(){
+        return productoService.findAllCategories();
     }
 
     @GetMapping({"/listar", "/"})
@@ -30,6 +48,22 @@ public class ProductoController {
         model.addAttribute("productos", productos);
         model.addAttribute("titulo", "Listado de productos");
         return "listar";
+    }
+
+    @GetMapping("/eliminar/{id}")
+    public Mono<String> eliminar (@PathVariable String id){
+        return productoService.findById(id)
+                .defaultIfEmpty(new Producto())
+                .flatMap(p ->{
+                    if (Objects.isNull(p.getId())){
+                        return Mono.error(new InterruptedException("No existe el producto a eliminar"));
+                    }
+                    return Mono.just(p);
+                }).flatMap(p ->{
+                    log.info("Eliminando producto: {} con nombre: {}", p.getId(), p.getNombre());
+                    return productoService.delete(p);
+                }).then(Mono.just("redirect:/listar?success=producto+eliminado+con+exito"))
+                .onErrorResume(ex -> Mono.just("redirect:/listar?error=no+existe+el+producto+a+eliminar"));
     }
 
     @GetMapping("/listar-datadriver")
@@ -67,14 +101,76 @@ public class ProductoController {
     public String crear(Model model){
         model.addAttribute("producto", new Producto());
         model.addAttribute("titulo", "Formulario de producto");
+        model.addAttribute("boton", "Crear");
         return "form";
     }
 
-    @PostMapping("/form")
-    public Mono<String> save(Producto producto){
-        return productoService.save(producto).doOnNext(p -> {
-            log.info(String.format("El producto %s se ha almacenado", p.getNombre()));
-        }).then(Mono.just("redirect:/listar"));
+    @GetMapping("/form-v2/{id}")
+    public Mono<String> editarv2(@PathVariable String id, Model model){
+        return productoService.findById(id)
+                .doOnNext(producto -> {
+                    model.addAttribute("titulo", "Editar producto");
+                    model.addAttribute("producto", producto);
+                    model.addAttribute("boton", "Editar");
+                }).defaultIfEmpty(new Producto())
+                .flatMap(p -> {
+                    if (Objects.isNull(p.getId())){
+                        return Mono.error(new InterruptedException("No existe el producto a editar"));
+                    }
+                    return Mono.just(p);
+                })
+                .then(Mono.just("form"))
+                .onErrorResume(ex -> Mono.just("redirect:/listar?error+no+existe+el+producto"));
+    }
 
+
+    @GetMapping("/form/{id}")
+    public String editar(@PathVariable String id, Model model){
+        Mono<Producto> producto = productoService.findById(id)
+                .defaultIfEmpty(new Producto());
+        model.addAttribute("titulo", "Editar producto");
+        model.addAttribute("producto", producto);
+        model.addAttribute("boton", "Editar");
+        return "form";
+    }
+
+
+    @PostMapping("/form")
+    public Mono<String> save(@Valid Producto producto, BindingResult result, SessionStatus status, Model model, @RequestPart FilePart file){
+        if (result.hasErrors()){
+            model.addAttribute("titulo", "Error en el formulario de producto");
+            model.addAttribute("boton", "Guardar");
+            return Mono.just("form");
+        }else{
+            status.setComplete();
+            if (producto.getDate() == null){
+                producto.setDate(new Date());
+            }
+
+            if (!file.filename().isEmpty()){
+                producto.setFoto(UUID.randomUUID().toString()+ "-" +file.filename()
+                        .replace(" ", "")
+                        .replace(":","")
+                        .replace("\\", "")
+                );
+
+            }
+
+            Mono<Categoria> categoria = productoService.findCategoryById(producto.getCategoria().getId());
+            return categoria.flatMap(c-> {
+                producto.setCategoria(c);
+                return productoService.save(producto);
+            }).doOnNext(p -> {
+                log.info("La categoria: {} se ha almacenado correctamente", p.getCategoria().getNombre());
+                log.info(String.format("El producto %s se ha almacenado", p.getNombre()));
+            })
+            .flatMap(p -> {
+                if (!file.filename().isEmpty()){
+                    return file.transferTo(new File(pathToImages + p.getFoto()));
+                }
+                return Mono.empty();
+            })
+            .then(Mono.just("redirect:/listar?success=producto+guardado+con+exito"));
+        }
     }
 }
