@@ -24,7 +24,7 @@
         </thead>
         <tbody>
         <tr th:each="producto: ${productos}">
-            <th th:text="${producto.id}"></th>
+            <th><a th:href="${'/ver/' + producto.id}" th:text="${#strings.abbreviate(producto.id, 10)}"></a></th>
             <th th:text="${producto.nombre}"></th>
             <th th:text="${producto.precio}"></th>
             <th th:text="${producto.date}"></th>
