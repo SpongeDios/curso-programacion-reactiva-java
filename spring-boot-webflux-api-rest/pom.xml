@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.hector.springboot.webflux</groupId>
-    <artifactId>spring-webflux-api-rest</artifactId>
+    <artifactId>spring-boot-webflux-api-rest</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>spring-webflux-api-rest</name>
-    <description>spring-webflux-api-rest</description>
+    <name>spring-boot-webflux-api-rest</name>
+    <description>spring-boot-webflux-api-rest</description>
     <properties>
         <java.version>11</java.version>
     </properties>
@@ -46,6 +46,11 @@
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
     </dependencies>
 
