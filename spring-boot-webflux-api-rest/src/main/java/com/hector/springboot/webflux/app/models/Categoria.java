@@ -11,7 +11,6 @@ import javax.validation.constraints.NotEmpty;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @Document(collection = "categorias")
 public class Categoria {
@@ -22,6 +21,11 @@ public class Categoria {
     private String nombre;
 
     public Categoria(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public Categoria(String id, String nombre) {
+        this.id = id;
         this.nombre = nombre;
     }
 }
