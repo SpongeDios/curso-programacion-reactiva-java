@@ -36,7 +36,7 @@ public class ProductoHandler {
     public Mono<ServerResponse> listar (ServerRequest request){
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(productoService.findAll(), Producto.class);
+                .body(productoService.findAll().repeat(500), Producto.class);
     }
 
     @Value("${config.uploads.path}")
